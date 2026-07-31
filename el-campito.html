@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cabaña El Campito</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.6.0/tabler-icons.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f0;--bg2:#fff;--bg3:#f8f8f5;--text:#1a1a1a;--text2:#555;--text3:#888;--accent:#367C2B;--accent2:#4a9e3c;--accent-bg:#e8f5e3;--accent-t:#2a6122;--jd-yellow:#FFDE00;--danger:#c62828;--danger-bg:#ffebee;--warn:#f57f17;--warn-bg:#fff8e1;--border:#e0ddd5;--border2:#ccc;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--accent);color:#fff;display:flex;flex-direction:column;flex-shrink:0;transition:width .2s}.sidebar.collapsed{width:60px}.sidebar.collapsed .nav-text,.sidebar.collapsed .logo-text,.sidebar.collapsed .user-info span,.sidebar.collapsed .campo-sel{display:none}.sidebar.collapsed .logo{justify-content:center}.sidebar.collapsed .nav-item{justify-content:center;padding:12px}.sidebar.collapsed .user-box{justify-content:center}
+.logo{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.15)}.logo img{height:48px;flex-shrink:0}.logo-text{font-size:16px;font-weight:600}
+.campo-sel{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.15)}
+.campo-sel select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-family:inherit}
+.campo-sel select option{color:#1a1a1a;background:#fff}
+.campo-sel label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.6);display:block;margin-bottom:4px}
+.nav{flex:1;overflow-y:auto;padding:8px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.75);transition:.15s;border-left:3px solid transparent}.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}.nav-item.active{background:rgba(255,255,255,.15);color:#fff;border-left-color:var(--jd-yellow)}.nav-item i{font-size:20px;width:24px;text-align:center}
+.nav-sep{height:1px;background:rgba(255,255,255,.12);margin:8px 12px}
+.user-box{display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid rgba(255,255,255,.15)}.user-box .avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}.user-info span{font-size:12px;display:block}.user-info .uname{color:#fff;font-weight:500}.user-info .urole{color:rgba(255,255,255,.6)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}.topbar-left{display:flex;align-items:center;gap:12px}.topbar h1{font-size:18px;font-weight:600}.btn-toggle{background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:4px}.topbar-right{display:flex;align-items:center;gap:16px}.topbar-right .notif{position:relative;cursor:pointer;font-size:20px;color:var(--text2)}.notif-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center}
+.campo-badge{font-size:12px;color:var(--accent);background:var(--accent-bg);padding:3px 10px;border-radius:12px;font-weight:600}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}.card-title i{color:var(--accent)}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);text-align:center}.kpi-icon{font-size:22px;color:var(--accent);margin-bottom:4px}.kpi-val{font-size:26px;font-weight:700;color:var(--text)}.kpi-label{font-size:11px;color:var(--text2);margin-top:2px}.kpi-change{font-size:10px;margin-top:3px}.kpi-up{color:#2e7d32}.kpi-down{color:var(--danger)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}.grid-map{display:grid;grid-template-columns:1fr 320px;gap:16px}@media(max-width:900px){.grid-2,.grid-3,.grid-map{grid-template-columns:1fr}}
+.tbl-wrap{overflow-x:auto}table.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th{text-align:left;padding:8px 10px;background:var(--bg3);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border)}.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text)}.tbl tr:hover td{background:var(--bg3)}.tbl tr{cursor:pointer}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}.tag-green{background:var(--accent-bg);color:var(--accent-t)}.tag-red{background:var(--danger-bg);color:var(--danger)}.tag-yellow{background:var(--warn-bg);color:var(--warn)}.tag-blue{background:#e3f2fd;color:#1565c0}.tag-purple{background:#f3e5f5;color:#7b1fa2}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text);transition:.15s}.btn:hover{border-color:var(--border2);background:var(--bg3)}.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn-primary:hover{background:var(--accent2)}.btn-sm{padding:4px 9px;font-size:12px}
+.alert-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}.alert-row:last-child{border:none}.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.alert-dot.red{background:var(--danger)}.alert-dot.yellow{background:var(--warn)}.alert-dot.blue{background:#1976d2}
+#map{width:100%;height:100%;border-radius:var(--radius);min-height:400px}.map-container{height:calc(100vh - 130px)}.map-container .card{height:100%;display:flex;flex-direction:column}.map-container .card #map{flex:1}.info-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);overflow-y:auto}.info-panel h3{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}.info-panel h3 i{color:var(--accent)}.info-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}.info-row:last-child{border:none}.info-label{color:var(--text2)}.info-val{font-weight:500;color:var(--text)}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.2s}.modal-overlay.show{opacity:1;pointer-events:all}.modal{background:var(--bg2);border-radius:12px;width:92%;max-width:600px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}.modal-head h2{font-size:16px;font-weight:600}.modal-body{padding:18px}.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 18px;border-top:1px solid var(--border)}
+.form-group{margin-bottom:12px}.form-group label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg2);color:var(--text);font-family:inherit}.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent)}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.search-box{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);max-width:280px}.search-box i{color:var(--text3);font-size:16px}.search-box input{border:none;outline:none;font-size:13px;background:transparent;color:var(--text);width:100%}
+.ficha-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}.ficha-avatar{width:64px;height:64px;border-radius:12px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent)}.ficha-info h2{font-size:18px;font-weight:600}.ficha-info p{font-size:12px;color:var(--text2);margin-top:2px}
+.timeline{position:relative;padding-left:24px}.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}.timeline-item{position:relative;padding-bottom:14px}.timeline-dot{position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);background:var(--bg2)}.timeline-date{font-size:10px;color:var(--text3)}.timeline-text{font-size:12px;color:var(--text);margin-top:1px}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px}.tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s}.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}.tab-content{display:none}.tab-content.active{display:block}
+.leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15)}.leaflet-popup-content{margin:10px 14px;font-family:inherit;font-size:12px;line-height:1.5}
+.page{display:none}.page.active{display:block}
+/* Campo cards on dashboard */
+.campo-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.campo-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);cursor:pointer;transition:.15s;position:relative}
+.campo-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.campo-card.active-campo{border-color:var(--accent);border-width:2px}
+.campo-card h4{font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.campo-card h4 i{color:var(--accent)}
+.campo-card .campo-stats{display:flex;gap:12px;font-size:11px;color:var(--text2)}
+.campo-card .campo-stats span{display:flex;align-items:center;gap:3px}
+@media(max-width:768px){.sidebar{position:fixed;left:-220px;z-index:100;height:100vh;transition:.2s}.sidebar.open{left:0}.main{width:100%}}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="logo"><img src="data:image/webp;base64,UklGRqwGAABXRUJQVlA4WAoAAAAgAAAATwAAPgAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDggvgQAADAUAJ0BKlAAPwA+0WCpUCglI6Kk1VtJABoJYwDQTD0C1F/9fd9vmKAzoB4wWRfxwUHdYOp2qlGpeRnLv8T55NUpC/If+lQ5gnOXEtXJRpvnzjHfeej6jcIlsPhPrKhwDcnVA1sdDveFUxbwQWyupvhTOqCx0Jr4EutAzGhVGWCOlSeO7mA/QTCht57a/z2X1y/2zw0sB9inztmxV/8kQ8Hvu8HH/1PWqokAAP781CM/NYebcNFGmcQqEtUHYZgJLgcK8SOronhgZj3mxuYpC00/qrl+OEfgndtu9/nLJbx/ADrycTcsIWK7el1taS1+v+y2vGGoVBaQdoItBqGSNxZ6mhi2BVrXNDkTEjCDTX1mToyyDh8EK+4EQjkkj6a1ot5P5+RS1dMiIkPSLLFTYbwLvxQTtKtT/typSW9r6Ppfo95MOkM1+TNlxf+lhqSmlClFTtXY+cWAevguhl8tx/BhmzB1JBQlrgX7voAhk8lEL6h4hnlHayf8mf9vr5ZXsxWI2TCjKEiRt4S9eUe/kEGmUo6+ZgQ7a3xg0hEHb4DwzfTSP5d59/zSU7yX7wcxN2DVxVLNOQdcuLokVZ6oDugdFtkYWOUras6vVwgfp9Hrxmevc8tRHs11g1ODCPpj/2WN2ZX3vcr6vKrFt/yYBSiyMELekcDnGSSbO29gilndnBLSHkdUaMTY8fuKwVakKgNjnLi5jUpyWBzKkmaxhkOoNnDL9kdLpSmwpJWIQAjslmprqxtcgual0LTvibZRLRO/vwcKP78d19ZPNHfmksKEt15f2VKdl6Oa5SMiIPxi1bmHYt84tv/iakffKa39Q8pdG5uG5VwEntPN8pjCbPZZ7kgASrvn3bZtJrJaKP/9B7nt9f7nPAbn8a6X5rHF1m/qGjDY6n2QBejEd3XuIJ4E+uwbON0R78PYhTmG/sG4f2wds5L5FoDZygVHj5AQZA4U9g7A2TrLicVW3DacxdeX/oHj/SQulgXRY3Noz4OmvP31Sdb7xQukRcWrMnod/wnbyfmW60hvQV7nfBmprlWOsUXynbxt+9ygiibtUf9fWsBBqMDNDfJXoj8eYyCKEgxnwxVz1O04wcSZo6SxJTpd6+x4oK9q+FDwOBLm0cuHHcLNc8l0ns+nsAWRzihe3SEMN4jjFC913zDz7wZyy0OSIZnwxddDuvTQ5k9CDk2hIzu7jNRbphxIDK/+BJV8Br/a6mrfjVa9dwnBKQ6X5saIuH6u2WYrAv4bw5XlkbyKPG5AhL6ZDWsYPpfWcR99T90NBOyb5+vyJOLuKo8/JDjr3VDN/WrfDjXo6vf1xyKOWWaSwaUJAf7dXTYd3MPSaS8KEKnh3H0cX+ARIwjHkYKIxyn0wjwTUhYYNxEx3gSykHzuh6gZOTueRYjOsH8knY+i2lEKXhiIyUTBTcBMwG8dnJzxa37cUc0Nza+trfS6JAINZItGlIIChVGEtAQRvNKOSxDnPtwh47l5t4wjnRSVG9zi9hvvN2F6SjXfLvlveVES3kW12m1Usq493jGNLONu9hH16zY/ArVgCsycaH6IHapEndzWP4+oitrwExprJ2mfUunayMQNw0mlqHXD9X/ONNlPNJuwESs4AAAA" alt="El Campito" style="height:48px;border-radius:6px;background:#fff;padding:2px"><span class="logo-text">El Campito</span></div>
+  <div class="campo-sel">
+    <label>Campo activo</label>
+    <select id="campo-selector" onchange="switchCampo(this.value)">
+      <option value="all">Todos los campos</option>
+      <option value="campito">Campito</option>
+      <option value="losOlmos">Los Olmos</option>
+      <option value="elCaniadon">El Cañadón</option>
+      <option value="elCaniadon2">El Cañadón 2</option>
+      <option value="donAlejandro">Don Alejandro</option>
+    </select>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-page="dashboard"><i class="ti ti-layout-dashboard"></i><span class="nav-text">Dashboard</span></div>
+    <div class="nav-item" data-page="mapa"><i class="ti ti-map-2"></i><span class="nav-text">Mapa</span></div>
+    <div class="nav-sep"></div>
+    <div class="nav-item" data-page="hacienda"><i class="ti ti-pig-money"></i><span class="nav-text">Hacienda</span></div>
+    <div class="nav-item" data-page="sanidad"><i class="ti ti-heartbeat"></i><span class="nav-text">Sanidad</span></div>
+    <div class="nav-item" data-page="movimientos"><i class="ti ti-arrows-exchange"></i><span class="nav-text">Movimientos</span></div>
+    <div class="nav-sep"></div>
+    <div class="nav-item" data-page="agricultura"><i class="ti ti-plant"></i><span class="nav-text">Agricultura</span></div>
+    <div class="nav-item" data-page="personal"><i class="ti ti-users"></i><span class="nav-text">Personal</span></div>
+    <div class="nav-item" data-page="maquinaria"><i class="ti ti-tractor"></i><span class="nav-text">Maquinaria</span></div>
+    <div class="nav-sep"></div>
+    <div class="nav-item" data-page="gastos"><i class="ti ti-report-money"></i><span class="nav-text">Gastos</span></div>
+    <div class="nav-item" data-page="reportes"><i class="ti ti-chart-bar"></i><span class="nav-text">Reportes</span></div>
+    <div class="nav-sep"></div>
+    <div class="nav-item" data-page="config"><i class="ti ti-settings"></i><span class="nav-text">Configuración</span></div>
+  </nav>
+  <div class="user-box"><div class="avatar">MF</div><div class="user-info"><span class="uname">Mariano F.</span><span class="urole">Propietario</span></div></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+      <h1 id="page-title">Dashboard</h1>
+      <span class="campo-badge" id="campo-badge">Todos los campos</span>
+    </div>
+    <div class="topbar-right">
+      <div class="notif" onclick="showNotifications()"><i class="ti ti-bell"></i><span class="notif-badge">5</span></div>
+      <span style="font-size:12px;color:var(--text2)" id="today-date"></span>
+    </div>
+  </div>
+  <div class="content">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="campo-cards" id="campo-cards"></div>
+  <div class="kpi-grid" id="dash-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-bell"></i> Alertas activas</div></div>
+      <div class="alert-row"><span class="alert-dot red"></span><span>3 vacunaciones vencidas — Aftosa lote terneros</span><span class="tag tag-red">Urgente</span></div>
+      <div class="alert-row"><span class="alert-dot yellow"></span><span>Parto esperado: vaca #142 — Campito — 5 días</span><span class="tag tag-yellow">Próximo</span></div>
+      <div class="alert-row"><span class="alert-dot yellow"></span><span>15 terneros en edad de destete — Los Olmos</span><span class="tag tag-yellow">Pendiente</span></div>
+      <div class="alert-row"><span class="alert-dot blue"></span><span>Service tractor John Deere vencido — El Cañadón</span><span class="tag tag-blue">Maquinaria</span></div>
+      <div class="alert-row"><span class="alert-dot blue"></span><span>Potrero 4 al 92% de carga — Don Alejandro</span><span class="tag tag-blue">Info</span></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-chart-line"></i> Evolución del rodeo total</div></div><canvas id="chart-rodeo" height="200"></canvas></div>
+  </div>
+  <div class="grid-2" style="margin-top:14px">
+    <div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-arrows-exchange"></i> Últimos movimientos</div><button class="btn btn-sm" onclick="navigateTo('movimientos')">Ver todos</button></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Campo</th><th>Tipo</th><th>Cant.</th><th>Detalle</th></tr></thead><tbody id="dash-movs"></tbody></table></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-report-money"></i> Gastos por categoría</div></div><canvas id="chart-gastos" height="200"></canvas></div>
+  </div>
+</div>
+
+<!-- MAPA -->
+<div class="page" id="page-mapa">
+  <div class="grid-map map-container">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-map-2"></i> Mapa de establecimientos</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="setMapLayer('streets')"><i class="ti ti-map"></i> Calles</button>
+          <button class="btn btn-sm" onclick="setMapLayer('satellite')"><i class="ti ti-satellite"></i> Satelital</button>
+          <button class="btn btn-sm" onclick="setMapLayer('hybrid')"><i class="ti ti-world"></i> Híbrido</button>
+          <button class="btn btn-sm" onclick="setMapLayer('terrain')"><i class="ti ti-mountain"></i> Terreno</button>
+          <button class="btn btn-sm" onclick="fitAllCampos()"><i class="ti ti-arrows-maximize"></i> Ver todos</button>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+    <div class="info-panel" id="map-info">
+      <h3><i class="ti ti-info-circle"></i> Información</h3>
+      <p style="font-size:12px;color:var(--text2)">Hacé click en un campo para ver su información.</p>
+      <div id="campo-info-panel"></div>
+      <div style="margin-top:14px">
+        <h3><i class="ti ti-eye"></i> Visualización</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:12px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="chk-lines" checked onchange="togglePolyStyle()"> Bordes / Líneas</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="chk-fill" checked onchange="togglePolyStyle()"> Relleno</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="chk-labels" checked onchange="toggleLabels()"> Etiquetas</label>
+          <div style="margin-top:4px"><label style="font-size:11px;color:var(--text2)">Opacidad relleno</label><input type="range" id="range-opacity" min="0" max="50" value="20" style="width:100%" oninput="togglePolyStyle()"></div>
+          <div><label style="font-size:11px;color:var(--text2)">Grosor borde</label><input type="range" id="range-weight" min="1" max="8" value="3" style="width:100%" oninput="togglePolyStyle()"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px" id="legend">
+        <h3><i class="ti ti-palette"></i> Referencias</h3>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;margin-top:6px" id="legend-items"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HACIENDA -->
+<div class="page" id="page-hacienda">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="search-box"><i class="ti ti-search"></i><input placeholder="Buscar caravana, nombre..." id="search-animal" oninput="filterAnimals()"></div>
+      <select class="btn" id="filter-cat" onchange="filterAnimals()" style="font-size:12px"><option value="">Todas las categorías</option><option>Vaca</option><option>Toro</option><option>Vaquillona</option><option>Novillo</option><option>Ternero</option><option>Ternera</option></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn"><i class="ti ti-download"></i> Exportar</button>
+      <button class="btn btn-primary" onclick="openModalAnimal()"><i class="ti ti-plus"></i> Nuevo animal</button>
+    </div>
+  </div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Caravana</th><th>Nombre</th><th>Categoría</th><th>Raza</th><th>Campo</th><th>Edad</th><th>Peso</th><th>Estado</th><th></th></tr></thead><tbody id="tbody-animales"></tbody></table></div></div>
+  <div id="ficha-animal" style="display:none;margin-top:16px">
+    <div class="card">
+      <div class="ficha-header"><div class="ficha-avatar"><i class="ti ti-pig-money"></i></div><div class="ficha-info"><h2 id="ficha-nombre"></h2><p id="ficha-sub"></p></div><button class="btn btn-sm" onclick="closeFicha()" style="margin-left:auto"><i class="ti ti-x"></i> Cerrar</button></div>
+      <div class="tabs" id="ficha-tabs"><div class="tab active" data-tab="tab-datos">Datos</div><div class="tab" data-tab="tab-sanidad">Sanidad</div><div class="tab" data-tab="tab-pesajes">Pesajes</div><div class="tab" data-tab="tab-movs">Movimientos</div><div class="tab" data-tab="tab-genealogia">Genealogía</div></div>
+      <div class="tab-content active" id="tab-datos"><div class="grid-2"><div><h3 style="font-size:13px;font-weight:600;margin-bottom:8px">Identificación</h3><div id="ficha-datos-id"></div></div><div><h3 style="font-size:13px;font-weight:600;margin-bottom:8px">Reproducción</h3><div id="ficha-datos-repro"></div></div></div></div>
+      <div class="tab-content" id="tab-sanidad"><div id="ficha-sanidad-list"></div></div>
+      <div class="tab-content" id="tab-pesajes"><canvas id="chart-pesajes" height="180"></canvas><div id="ficha-pesajes-list" style="margin-top:10px"></div></div>
+      <div class="tab-content" id="tab-movs"><div id="ficha-movs-list"></div></div>
+      <div class="tab-content" id="tab-genealogia"><div id="ficha-genea"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SANIDAD -->
+<div class="page" id="page-sanidad">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div class="search-box"><i class="ti ti-search"></i><input placeholder="Buscar evento sanitario..."></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="openModalSanidad()"><i class="ti ti-plus"></i> Registrar</button><button class="btn" onclick="openModalSanidadMasiva()"><i class="ti ti-box-multiple"></i> Masiva</button></div>
+  </div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Caravana</th><th>Campo</th><th>Tipo</th><th>Producto</th><th>Próxima</th><th>Responsable</th></tr></thead><tbody id="tbody-sanidad"></tbody></table></div></div>
+</div>
+
+<!-- MOVIMIENTOS -->
+<div class="page" id="page-movimientos">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div class="search-box"><i class="ti ti-search"></i><input placeholder="Buscar movimiento..."></div>
+    <button class="btn btn-primary" onclick="openModalMov()"><i class="ti ti-plus"></i> Registrar movimiento</button>
+  </div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Campo</th><th>Tipo</th><th>Cant.</th><th>Origen</th><th>Destino</th><th>Motivo</th><th>Usuario</th></tr></thead><tbody id="tbody-movimientos"></tbody></table></div></div>
+</div>
+
+<!-- AGRICULTURA -->
+<div class="page" id="page-agricultura">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <select class="btn" style="font-size:12px"><option>Campaña 2025/26</option><option>Campaña 2024/25</option></select>
+    <button class="btn btn-primary"><i class="ti ti-plus"></i> Nuevo registro</button>
+  </div>
+  <div class="kpi-grid"><div class="kpi"><div class="kpi-icon"><i class="ti ti-plant"></i></div><div class="kpi-val">420 ha</div><div class="kpi-label">Superficie total</div></div><div class="kpi"><div class="kpi-icon"><i class="ti ti-leaf"></i></div><div class="kpi-val">250 ha</div><div class="kpi-label">Soja</div></div><div class="kpi"><div class="kpi-icon"><i class="ti ti-grain"></i></div><div class="kpi-val">120 ha</div><div class="kpi-label">Maíz</div></div><div class="kpi"><div class="kpi-icon"><i class="ti ti-plant-2"></i></div><div class="kpi-val">50 ha</div><div class="kpi-label">Pastura</div></div></div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Lote</th><th>Campo</th><th>Sup.</th><th>Cultivo</th><th>Variedad</th><th>Siembra</th><th>Estado</th><th>Rinde</th></tr></thead><tbody><tr><td>Lote A</td><td>Campito</td><td>120 ha</td><td>Soja</td><td>DM 46i</td><td>15/11/25</td><td><span class="tag tag-green">En desarrollo</span></td><td>3.2 tn/ha</td></tr><tr><td>Lote B</td><td>Los Olmos</td><td>130 ha</td><td>Soja</td><td>NS 4611</td><td>20/11/25</td><td><span class="tag tag-green">En desarrollo</span></td><td>3.0 tn/ha</td></tr><tr><td>Lote C</td><td>El Cañadón</td><td>120 ha</td><td>Maíz</td><td>DK 7210</td><td>01/10/25</td><td><span class="tag tag-yellow">Cosechando</span></td><td>8.5 tn/ha</td></tr><tr><td>Lote D</td><td>Don Alejandro</td><td>50 ha</td><td>Pastura</td><td>Festuca+Trébol</td><td>03/03/25</td><td><span class="tag tag-green">Establecida</span></td><td>—</td></tr></tbody></table></div></div>
+</div>
+
+<!-- PERSONAL -->
+<div class="page" id="page-personal">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="search-box"><i class="ti ti-search"></i><input placeholder="Buscar empleado..."></div><button class="btn btn-primary"><i class="ti ti-plus"></i> Nuevo empleado</button></div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nombre</th><th>Puesto</th><th>Campo asignado</th><th>Ingreso</th><th>Teléfono</th><th>Estado</th></tr></thead><tbody>
+    <tr><td>Juan Pérez</td><td>Capataz</td><td>Campito</td><td>15/03/2018</td><td>291-456789</td><td><span class="tag tag-green">Activo</span></td></tr>
+    <tr><td>Carlos Gómez</td><td>Peón general</td><td>Los Olmos</td><td>01/08/2020</td><td>291-567890</td><td><span class="tag tag-green">Activo</span></td></tr>
+    <tr><td>Pedro Ramírez</td><td>Encargado</td><td>El Cañadón</td><td>10/02/2019</td><td>291-678901</td><td><span class="tag tag-green">Activo</span></td></tr>
+    <tr><td>Roberto Silva</td><td>Tractorista</td><td>Don Alejandro</td><td>20/05/2019</td><td>291-789012</td><td><span class="tag tag-green">Activo</span></td></tr>
+    <tr><td>María López</td><td>Administrativa</td><td>Todos</td><td>10/01/2022</td><td>291-890123</td><td><span class="tag tag-green">Activo</span></td></tr>
+  </tbody></table></div></div>
+</div>
+
+<!-- MAQUINARIA -->
+<div class="page" id="page-maquinaria">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="search-box"><i class="ti ti-search"></i><input placeholder="Buscar..."></div><button class="btn btn-primary"><i class="ti ti-plus"></i> Agregar</button></div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Equipo</th><th>Marca/Modelo</th><th>Campo</th><th>Hs/Km</th><th>Service</th><th>Estado</th></tr></thead><tbody>
+    <tr><td>Tractor principal</td><td>John Deere 6130J</td><td>El Cañadón</td><td>4,200 hs</td><td><span class="tag tag-red">Vencido</span></td><td><span class="tag tag-green">Operativo</span></td></tr>
+    <tr><td>Tractor auxiliar</td><td>MF 4292</td><td>Los Olmos</td><td>6,800 hs</td><td>500 hs</td><td><span class="tag tag-green">Operativo</span></td></tr>
+    <tr><td>Camioneta</td><td>Toyota Hilux</td><td>Campito</td><td>85,000 km</td><td>5,000 km</td><td><span class="tag tag-green">Operativo</span></td></tr>
+    <tr><td>Sembradora</td><td>Apache 27000</td><td>Don Alejandro</td><td>—</td><td>Pre-campaña</td><td><span class="tag tag-yellow">Guardada</span></td></tr>
+  </tbody></table></div></div>
+</div>
+
+<!-- GASTOS -->
+<div class="page" id="page-gastos">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:8px"><select class="btn" style="font-size:12px"><option>Julio 2026</option><option>Junio 2026</option></select><select class="btn" style="font-size:12px"><option value="">Todas</option><option>Ganadería</option><option>Agricultura</option><option>Personal</option><option>Maquinaria</option></select></div>
+    <div style="display:flex;gap:8px"><button class="btn"><i class="ti ti-download"></i> Exportar</button><button class="btn btn-primary"><i class="ti ti-plus"></i> Nuevo gasto</button></div>
+  </div>
+  <div class="kpi-grid"><div class="kpi"><div class="kpi-val" style="color:var(--danger)">$2,400,000</div><div class="kpi-label">Gastos del mes</div></div><div class="kpi"><div class="kpi-val" style="color:#2e7d32">$3,800,000</div><div class="kpi-label">Ingresos</div></div><div class="kpi"><div class="kpi-val" style="color:var(--accent)">$1,400,000</div><div class="kpi-label">Resultado neto</div></div></div>
+  <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Concepto</th><th>Campo</th><th>Categoría</th><th>Monto</th></tr></thead><tbody>
+    <tr><td>28/07</td><td>Venta 18 novillos — Frigo Sur</td><td>Campito</td><td><span class="tag tag-green">Ganadería</span></td><td style="color:#2e7d32;font-weight:600">+$3,200,000</td></tr>
+    <tr><td>27/07</td><td>Sueldos julio</td><td>Todos</td><td><span class="tag tag-blue">Personal</span></td><td style="color:var(--danger)">-$1,200,000</td></tr>
+    <tr><td>25/07</td><td>Gasoil 500L</td><td>El Cañadón</td><td><span class="tag tag-purple">Maquinaria</span></td><td style="color:var(--danger)">-$320,000</td></tr>
+    <tr><td>22/07</td><td>Vacuna Aftosa x 400</td><td>Los Olmos</td><td><span class="tag tag-green">Ganadería</span></td><td style="color:var(--danger)">-$180,000</td></tr>
+    <tr><td>15/07</td><td>Venta 80tn maíz</td><td>Don Alejandro</td><td><span class="tag tag-yellow">Agricultura</span></td><td style="color:#2e7d32;font-weight:600">+$600,000</td></tr>
+  </tbody></table></div></div>
+</div>
+
+<!-- REPORTES -->
+<div class="page" id="page-reportes">
+  <div class="grid-3" style="margin-bottom:14px">
+    <div class="card" style="cursor:pointer;text-align:center;padding:20px"><i class="ti ti-pig-money" style="font-size:28px;color:var(--accent)"></i><h3 style="font-size:14px;font-weight:600;margin-top:6px">Reporte de rodeo</h3><p style="font-size:11px;color:var(--text2);margin-top:3px">Stock, movimientos, reproductivos</p></div>
+    <div class="card" style="cursor:pointer;text-align:center;padding:20px"><i class="ti ti-plant" style="font-size:28px;color:var(--accent)"></i><h3 style="font-size:14px;font-weight:600;margin-top:6px">Reporte agrícola</h3><p style="font-size:11px;color:var(--text2);margin-top:3px">Rindes, insumos, costos/ha</p></div>
+    <div class="card" style="cursor:pointer;text-align:center;padding:20px"><i class="ti ti-report-money" style="font-size:28px;color:var(--accent)"></i><h3 style="font-size:14px;font-weight:600;margin-top:6px">Reporte económico</h3><p style="font-size:11px;color:var(--text2);margin-top:3px">Ingresos vs gastos por campo</p></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-chart-pie"></i> Composición del rodeo</div></div><canvas id="chart-composicion" height="250"></canvas></div>
+    <div class="card"><div class="card-header"><div class="card-title"><i class="ti ti-chart-bar"></i> Cabezas por campo</div></div><canvas id="chart-porcampo" height="250"></canvas></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div class="page" id="page-config">
+  <div class="grid-2">
+    <div class="card"><div class="card-title" style="margin-bottom:14px"><i class="ti ti-building"></i> Datos del establecimiento</div><div class="form-group"><label>Nombre</label><input value="Cabaña El Campito"></div><div class="form-row"><div class="form-group"><label>Localidad</label><input value="Tornquist"></div><div class="form-group"><label>Provincia</label><input value="Buenos Aires"></div></div><div class="form-group"><label>RENSPA</label><input value=""></div><button class="btn btn-primary" style="margin-top:6px"><i class="ti ti-check"></i> Guardar</button></div>
+    <div class="card"><div class="card-title" style="margin-bottom:14px"><i class="ti ti-users"></i> Usuarios</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Usuario</th><th>Rol</th><th>Campos</th><th>Estado</th></tr></thead><tbody><tr><td>Mariano F.</td><td>Propietario</td><td>Todos</td><td><span class="tag tag-green">Activo</span></td></tr><tr><td>Juan P.</td><td>Capataz</td><td>Campito</td><td><span class="tag tag-green">Activo</span></td></tr><tr><td>Pedro R.</td><td>Encargado</td><td>El Cañadón</td><td><span class="tag tag-green">Activo</span></td></tr><tr><td>Carlos G.</td><td>Encargado</td><td>Los Olmos</td><td><span class="tag tag-green">Activo</span></td></tr></tbody></table></div><button class="btn" style="margin-top:10px"><i class="ti ti-plus"></i> Agregar usuario</button></div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)"><div class="modal" onclick="event.stopPropagation()"><div class="modal-head"><h2 id="modal-title"></h2><button class="btn btn-sm" onclick="closeModal()"><i class="ti ti-x"></i></button></div><div class="modal-body" id="modal-body"></div><div class="modal-foot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveModal()"><i class="ti ti-check"></i> Guardar</button></div></div></div>
+
+<script>
+// ========== CAMPOS DATA (coordenadas reales de KMZ) ==========
+const campos = {
+  campito: {id:'campito',nombre:'Campito',encargado:'Juan Pérez',superficie:450,cabezas:95,color:'#2d6a4f',
+    coords:[[-37.86651776594248,-63.03606176452632],[-37.88811834589525,-63.00935213238739],[-37.90387792714702,-63.02917151145011],[-37.8823145612734,-63.05596615535556],[-37.86651776594248,-63.03606176452632]]},
+  losOlmos: {id:'losOlmos',nombre:'Los Olmos',encargado:'Carlos Gómez',superficie:380,cabezas:78,color:'#ff9800',
+    coords:[[-37.88225588007528,-62.97547918029694],[-37.86364041293097,-62.99245473748162],[-37.84431090166998,-62.96798320522687],[-37.86047509520701,-62.94800910656094],[-37.88225588007528,-62.97547918029694]]},
+  elCaniadon: {id:'elCaniadon',nombre:'El Cañadón',encargado:'Pedro Ramírez',superficie:520,cabezas:110,color:'#e53935',
+    coords:[[-37.89920963020132,-62.87579763235612],[-37.91526751821358,-62.85598959360146],[-37.94584640484993,-62.89500449408529],[-37.9298977571409,-62.91548649404071],[-37.89920963020132,-62.87579763235612]]},
+  elCaniadon2: {id:'elCaniadon2',nombre:'El Cañadón 2',encargado:'Pedro Ramírez',superficie:310,cabezas:45,color:'#ab47bc',
+    coords:[[-37.9118716245647,-62.85157466101189],[-37.92479847593606,-62.83539439692191],[-37.94365311889017,-62.85974354713527],[-37.93079086409579,-62.87587728538761],[-37.9118716245647,-62.85157466101189]]},
+  donAlejandro: {id:'donAlejandro',nombre:'Don Alejandro',encargado:'Roberto Silva',superficie:480,cabezas:65,color:'#1e88e5',
+    coords:[[-37.91342156391567,-63.01563143091387],[-37.92934334661849,-62.99580952378346],[-37.9471835123145,-63.01852420303719],[-37.93136238412103,-63.03861282171684],[-37.91342156391567,-63.01563143091387]]}
+};
+const totalCabezas = Object.values(campos).reduce((s,c)=>s+c.cabezas,0);
+const totalSuperficie = Object.values(campos).reduce((s,c)=>s+c.superficie,0);
+
+let activeCampo = 'all';
+
+// ========== ANIMALES ==========
+const animales = [
+  {id:1,caravana:'AR001',nombre:'Estrella',categoria:'Vaca',raza:'Angus',campo:'campito',nacimiento:'2019-03-15',peso:480,estado:'Activo',sexo:'H',madre:'—',padre:'Zeus',crias:3,preniada:'Sí',servicioFecha:'2026-02-10'},
+  {id:2,caravana:'AR002',nombre:'Tormenta',categoria:'Vaca',raza:'Hereford',campo:'campito',nacimiento:'2018-08-22',peso:510,estado:'Activo',sexo:'H',madre:'—',padre:'Rayo',crias:4,preniada:'Sí',servicioFecha:'2026-01-28'},
+  {id:3,caravana:'AR003',nombre:'Zeus',categoria:'Toro',raza:'Angus',campo:'losOlmos',nacimiento:'2017-05-10',peso:850,estado:'Activo',sexo:'M',madre:'—',padre:'—',crias:45,preniada:'—',servicioFecha:'—'},
+  {id:4,caravana:'AR004',nombre:'Luna',categoria:'Vaquillona',raza:'Angus',campo:'losOlmos',nacimiento:'2023-09-12',peso:320,estado:'Activo',sexo:'H',madre:'Estrella',padre:'Zeus',crias:0,preniada:'No',servicioFecha:'—'},
+  {id:5,caravana:'AR005',nombre:'Rayo',categoria:'Toro',raza:'Hereford',campo:'elCaniadon',nacimiento:'2018-02-28',peso:820,estado:'Activo',sexo:'M',madre:'—',padre:'—',crias:38,preniada:'—',servicioFecha:'—'},
+  {id:6,caravana:'AR006',nombre:'Negra',categoria:'Vaca',raza:'Angus',campo:'elCaniadon',nacimiento:'2020-06-18',peso:460,estado:'Activo',sexo:'H',madre:'—',padre:'Zeus',crias:2,preniada:'Sí',servicioFecha:'2026-03-05'},
+  {id:7,caravana:'AR007',nombre:'Pampa',categoria:'Novillo',raza:'Angus',campo:'donAlejandro',nacimiento:'2024-04-10',peso:380,estado:'Activo',sexo:'M',madre:'Estrella',padre:'Zeus',crias:0,preniada:'—',servicioFecha:'—'},
+  {id:8,caravana:'AR008',nombre:'Rocío',categoria:'Ternera',raza:'Hereford',campo:'elCaniadon2',nacimiento:'2025-11-20',peso:180,estado:'Activo',sexo:'H',madre:'Tormenta',padre:'Rayo',crias:0,preniada:'—',servicioFecha:'—'},
+  {id:9,caravana:'AR009',nombre:'Trueno',categoria:'Ternero',raza:'Angus',campo:'campito',nacimiento:'2025-12-05',peso:165,estado:'Activo',sexo:'M',madre:'Negra',padre:'Zeus',crias:0,preniada:'—',servicioFecha:'—'},
+  {id:10,caravana:'AR010',nombre:'Brisa',categoria:'Vaca',raza:'Braford',campo:'donAlejandro',nacimiento:'2019-07-30',peso:470,estado:'Activo',sexo:'H',madre:'—',padre:'—',crias:3,preniada:'No',servicioFecha:'—'},
+  {id:11,caravana:'AR011',nombre:'Canela',categoria:'Vaquillona',raza:'Angus',campo:'losOlmos',nacimiento:'2023-11-02',peso:310,estado:'Activo',sexo:'H',madre:'Negra',padre:'Zeus',crias:0,preniada:'No',servicioFecha:'—'},
+  {id:12,caravana:'AR012',nombre:'Fierro',categoria:'Novillo',raza:'Hereford',campo:'elCaniadon',nacimiento:'2024-05-15',peso:365,estado:'Activo',sexo:'M',madre:'Tormenta',padre:'Rayo',crias:0,preniada:'—',servicioFecha:'—'},
+];
+
+const sanidadData = [
+  {fecha:'25/07/2026',caravana:'AR001',campo:'campito',tipo:'Vacunación',producto:'Aftosa — Biogénesis',proxima:'25/01/2027',resp:'Dr. Martínez'},
+  {fecha:'20/07/2026',caravana:'AR003',campo:'losOlmos',tipo:'Desparasitación',producto:'Ivermectina',proxima:'20/10/2026',resp:'Juan Pérez'},
+  {fecha:'15/07/2026',caravana:'AR006',campo:'elCaniadon',tipo:'Tacto',producto:'Positivo 4 meses',proxima:'—',resp:'Dr. Martínez'},
+  {fecha:'10/07/2026',caravana:'AR008',campo:'elCaniadon2',tipo:'Vacunación',producto:'Mancha y Gangrena',proxima:'10/08/2026',resp:'Dr. Martínez'},
+  {fecha:'05/07/2026',caravana:'AR009',campo:'campito',tipo:'Desparasitación',producto:'Ricobendazole',proxima:'05/10/2026',resp:'Juan Pérez'},
+];
+
+const movimientosData = [
+  {fecha:'28/07/2026',campo:'campito',tipo:'Cambio potrero',cant:25,origen:'Potrero 2',destino:'Potrero 5',motivo:'Rotación',user:'Juan Pérez'},
+  {fecha:'25/07/2026',campo:'campito',tipo:'Venta',cant:18,origen:'Campito',destino:'Frigo Sur',motivo:'Venta novillos',user:'Mariano F.'},
+  {fecha:'22/07/2026',campo:'losOlmos',tipo:'Ingreso',cant:3,origen:'Cabaña Don Pedro',destino:'Los Olmos',motivo:'Compra toros',user:'Mariano F.'},
+  {fecha:'20/07/2026',campo:'elCaniadon',tipo:'Destete',cant:15,origen:'Potrero madre',destino:'Potrero recría',motivo:'Destete 7 meses',user:'Pedro Ramírez'},
+  {fecha:'15/07/2026',campo:'donAlejandro',tipo:'Cambio potrero',cant:40,origen:'Potrero 3',destino:'Potrero 1',motivo:'Descanso',user:'Roberto Silva'},
+];
+
+// ========== NAVIGATION ==========
+function navigateTo(page){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const el=document.getElementById('page-'+page);if(el)el.classList.add('active');const nav=document.querySelector('.nav-item[data-page="'+page+'"]');if(nav)nav.classList.add('active');const titles={dashboard:'Dashboard',mapa:'Mapa',hacienda:'Hacienda',sanidad:'Sanidad',movimientos:'Movimientos',agricultura:'Agricultura',personal:'Personal',maquinaria:'Maquinaria',gastos:'Gastos e ingresos',reportes:'Reportes',config:'Configuración'};document.getElementById('page-title').textContent=titles[page]||page;if(page==='mapa')setTimeout(()=>{if(map){map.invalidateSize();fitAllCampos()}},100);if(page==='reportes')initReportCharts();closeFicha()}
+document.querySelectorAll('.nav-item').forEach(item=>{item.addEventListener('click',()=>navigateTo(item.dataset.page))});
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(window.innerWidth<=768){sb.classList.toggle('open')}else{sb.classList.toggle('collapsed')}}
+document.getElementById('today-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+
+// ========== CAMPO SWITCH ==========
+function switchCampo(id){
+  activeCampo=id;
+  document.getElementById('campo-badge').textContent=id==='all'?'Todos los campos':campos[id].nombre;
+  renderDashboard();renderAnimales(getFilteredAnimals());renderSanidad();renderMovimientos();
+  if(map){
+    if(id==='all') fitAllCampos();
+    else {const c=campos[id];map.fitBounds(L.polygon(c.coords).getBounds().pad(0.3))}
+  }
+}
+
+// ========== DASHBOARD ==========
+function renderDashboard(){
+  const cc=document.getElementById('campo-cards');
+  cc.innerHTML=Object.values(campos).map(c=>`<div class="campo-card ${activeCampo===c.id?'active-campo':''}" onclick="switchCampo('${c.id}')"><h4><i class="ti ti-map-pin"></i>${c.nombre}</h4><div class="campo-stats"><span><i class="ti ti-pig-money"></i> ${c.cabezas} cab</span><span><i class="ti ti-ruler-2"></i> ${c.superficie} ha</span></div><div style="font-size:11px;color:var(--text3);margin-top:4px">Encargado: ${c.encargado}</div></div>`).join('');
+  const cab = activeCampo==='all'?totalCabezas:campos[activeCampo].cabezas;
+  const sup = activeCampo==='all'?totalSuperficie:campos[activeCampo].superficie;
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-icon"><i class="ti ti-pig-money"></i></div><div class="kpi-val">${cab}</div><div class="kpi-label">Cabezas</div></div>
+    <div class="kpi"><div class="kpi-icon"><i class="ti ti-ruler-2"></i></div><div class="kpi-val">${sup} ha</div><div class="kpi-label">Superficie</div></div>
+    <div class="kpi"><div class="kpi-icon"><i class="ti ti-scale"></i></div><div class="kpi-val">0.82</div><div class="kpi-label">GDP (kg/día)</div><div class="kpi-change kpi-up">+0.05</div></div>
+    <div class="kpi"><div class="kpi-icon"><i class="ti ti-heart"></i></div><div class="kpi-val">89%</div><div class="kpi-label">Preñez</div></div>
+    <div class="kpi"><div class="kpi-icon"><i class="ti ti-baby-carriage"></i></div><div class="kpi-val">28</div><div class="kpi-label">Nacimientos</div></div>
+    <div class="kpi"><div class="kpi-icon"><i class="ti ti-report-money"></i></div><div class="kpi-val">$1.4M</div><div class="kpi-label">Resultado</div><div class="kpi-change kpi-up">Positivo</div></div>`;
+  const mv=activeCampo==='all'?movimientosData:movimientosData.filter(m=>m.campo===activeCampo);
+  const typeTag={'Cambio potrero':'tag-green','Venta':'tag-red','Ingreso':'tag-blue','Destete':'tag-yellow'};
+  document.getElementById('dash-movs').innerHTML=mv.slice(0,4).map(m=>`<tr><td>${m.fecha.substring(0,5)}</td><td>${campos[m.campo]?.nombre||m.campo}</td><td><span class="tag ${typeTag[m.tipo]||'tag-green'}">${m.tipo}</span></td><td>${m.cant}</td><td>${m.destino}</td></tr>`).join('');
+}
+
+// ========== MAP ==========
+let map,currentLayer;
+const polyLayers=[];const labelLayers=[];
+const tileLayers={streets:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM',maxZoom:19}),satellite:L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{attribution:'Google',maxZoom:20}),terrain:L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',{attribution:'Google',maxZoom:20}),hybrid:L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{attribution:'Google',maxZoom:20})};
+function initMap(){
+  map=L.map('map',{preferCanvas:true}).setView([-37.91,-62.96],11);currentLayer=tileLayers.satellite;currentLayer.addTo(map);
+  Object.values(campos).forEach(c=>{
+    const poly=L.polygon(c.coords,{color:c.color,weight:3,fillOpacity:0.2,fillColor:c.color}).addTo(map);
+    poly.campoId=c.id;
+    poly.on('click',()=>showCampoInfo(c));
+    polyLayers.push(poly);
+    const center=poly.getBounds().getCenter();
+    const lbl=L.marker(center,{icon:L.divIcon({className:'',html:`<div style="background:${c.color};color:#fff;padding:3px 10px;border-radius:6px;font-size:12px;white-space:nowrap;font-family:sans-serif;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.3)">${c.nombre}</div>`,iconSize:null})}).addTo(map);
+    labelLayers.push(lbl);
+  });
+  document.getElementById('legend-items').innerHTML=Object.values(campos).map(c=>`<div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:${c.color}"></div>${c.nombre}</div>`).join('');
+  fitAllCampos();
+}
+function setMapLayer(t){map.removeLayer(currentLayer);currentLayer=tileLayers[t];currentLayer.addTo(map)}
+function fitAllCampos(){const all=Object.values(campos).flatMap(c=>c.coords);map.fitBounds(all,{padding:[30,30]})}
+function togglePolyStyle(){
+  const showLines=document.getElementById('chk-lines').checked;
+  const showFill=document.getElementById('chk-fill').checked;
+  const opacity=parseInt(document.getElementById('range-opacity').value)/100;
+  const weight=parseInt(document.getElementById('range-weight').value);
+  polyLayers.forEach(p=>{p.setStyle({weight:showLines?weight:0,fillOpacity:showFill?opacity:0})});
+}
+function toggleLabels(){
+  const show=document.getElementById('chk-labels').checked;
+  labelLayers.forEach(l=>{if(show)l.addTo(map);else map.removeLayer(l)});
+}
+function showCampoInfo(c){
+  const panel=document.getElementById('campo-info-panel');
+  const anims=animales.filter(a=>a.campo===c.id);
+  panel.innerHTML=`<h3 style="font-size:15px;font-weight:600;color:${c.color};margin:12px 0 10px"><i class="ti ti-map-pin"></i> ${c.nombre}</h3>
+    <div class="info-row"><span class="info-label">Encargado</span><span class="info-val">${c.encargado}</span></div>
+    <div class="info-row"><span class="info-label">Superficie</span><span class="info-val">${c.superficie} ha</span></div>
+    <div class="info-row"><span class="info-label">Cabezas</span><span class="info-val">${c.cabezas}</span></div>
+    <div class="info-row"><span class="info-label">Carga</span><span class="info-val">${(c.cabezas/c.superficie).toFixed(2)} cab/ha</span></div>
+    ${anims.length?`<h4 style="font-size:12px;font-weight:600;margin:10px 0 6px">Animales registrados (${anims.length})</h4>
+    <table class="tbl" style="font-size:11px"><thead><tr><th>Carav.</th><th>Nombre</th><th>Cat.</th><th>Peso</th></tr></thead><tbody>${anims.map(a=>`<tr onclick="navigateTo('hacienda');setTimeout(()=>openFicha(${a.id}),100)"><td>${a.caravana}</td><td>${a.nombre}</td><td>${a.categoria}</td><td>${a.peso}kg</td></tr>`).join('')}</tbody></table>`:''}
+    <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="switchCampo('${c.id}')"><i class="ti ti-eye"></i> Ver este campo</button>`;
+}
+
+// ========== ANIMALES ==========
+function getFilteredAnimals(){
+  const q=(document.getElementById('search-animal')?.value||'').toLowerCase();
+  const cat=document.getElementById('filter-cat')?.value||'';
+  return animales.filter(a=>{
+    if(activeCampo!=='all'&&a.campo!==activeCampo)return false;
+    if(q&&!a.caravana.toLowerCase().includes(q)&&!a.nombre.toLowerCase().includes(q))return false;
+    if(cat&&a.categoria!==cat)return false;
+    return true;
+  });
+}
+function renderAnimales(list){
+  document.getElementById('tbody-animales').innerHTML=list.map(a=>{
+    const age=calcAge(a.nacimiento);
+    return`<tr onclick="openFicha(${a.id})"><td><strong>${a.caravana}</strong></td><td>${a.nombre}</td><td>${a.categoria}</td><td>${a.raza}</td><td>${campos[a.campo]?.nombre||a.campo}</td><td>${age}</td><td>${a.peso}kg</td><td><span class="tag tag-green">${a.estado}</span></td><td><i class="ti ti-eye" style="color:var(--accent)"></i></td></tr>`;
+  }).join('');
+}
+function filterAnimals(){renderAnimales(getFilteredAnimals())}
+function calcAge(d){const b=new Date(d),n=new Date();let y=n.getFullYear()-b.getFullYear(),m=n.getMonth()-b.getMonth();if(m<0){y--;m+=12}return y>0?y+'a '+m+'m':m+'m'}
+
+// ========== FICHA ==========
+function openFicha(id){
+  const a=animales.find(x=>x.id===id);if(!a)return;
+  document.getElementById('ficha-animal').style.display='block';
+  document.getElementById('ficha-nombre').textContent=a.nombre+' — '+a.caravana;
+  document.getElementById('ficha-sub').textContent=a.categoria+' '+a.raza+' | '+(campos[a.campo]?.nombre||a.campo)+' | '+a.peso+'kg';
+  document.getElementById('ficha-datos-id').innerHTML=['Caravana:'+a.caravana,'Raza:'+a.raza,'Sexo:'+(a.sexo==='H'?'Hembra':'Macho'),'Nacimiento:'+a.nacimiento,'Edad:'+calcAge(a.nacimiento),'Campo:'+(campos[a.campo]?.nombre||''),'Peso:'+a.peso+'kg'].map(r=>{const[l,v]=r.split(':');return`<div class="info-row"><span class="info-label">${l}</span><span class="info-val">${v}</span></div>`}).join('');
+  document.getElementById('ficha-datos-repro').innerHTML=['Madre:'+a.madre,'Padre:'+a.padre,'Crías:'+a.crias,'Preñada:'+a.preniada,'Servicio:'+a.servicioFecha].map(r=>{const[l,v]=r.split(':');return`<div class="info-row"><span class="info-label">${l}</span><span class="info-val">${v}</span></div>`}).join('');
+  const san=sanidadData.filter(s=>s.caravana===a.caravana);
+  document.getElementById('ficha-sanidad-list').innerHTML=san.length?`<table class="tbl"><thead><tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Próxima</th></tr></thead><tbody>${san.map(s=>`<tr><td>${s.fecha}</td><td>${s.tipo}</td><td>${s.producto}</td><td>${s.proxima}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">Sin registros</p>';
+  const pesajes=[{f:'28/07/26',p:a.peso},{f:'15/06/26',p:a.peso-15},{f:'01/05/26',p:a.peso-32}];
+  document.getElementById('ficha-pesajes-list').innerHTML=`<table class="tbl"><thead><tr><th>Fecha</th><th>Peso</th><th>GDP</th></tr></thead><tbody>${pesajes.map((x,i)=>{const gdp=i<pesajes.length-1?((x.p-pesajes[i+1].p)/30).toFixed(2):'—';return`<tr><td>${x.f}</td><td>${x.p}kg</td><td>${gdp}kg/d</td></tr>`}).join('')}</tbody></table>`;
+  const ctx=document.getElementById('chart-pesajes');if(window.chartP)window.chartP.destroy();
+  window.chartP=new Chart(ctx,{type:'line',data:{labels:pesajes.map(x=>x.f).reverse(),datasets:[{label:'Peso',data:pesajes.map(x=>x.p).reverse(),borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,.1)',fill:true,tension:.3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+  document.getElementById('ficha-movs-list').innerHTML=`<div class="timeline"><div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">28/07/2026</div><div class="timeline-text">Pesaje: ${a.peso}kg</div></div><div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">25/07/2026</div><div class="timeline-text">Vacunación Aftosa</div></div><div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">${a.nacimiento}</div><div class="timeline-text">Nacimiento</div></div></div>`;
+  document.getElementById('ficha-genea').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div style="display:flex;gap:30px"><div class="card" style="padding:10px;text-align:center;min-width:100px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Padre</div><div style="font-weight:600;margin-top:2px">${a.padre||'—'}</div></div><div class="card" style="padding:10px;text-align:center;min-width:100px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase">Madre</div><div style="font-weight:600;margin-top:2px">${a.madre||'—'}</div></div></div><div style="width:2px;height:16px;background:var(--border)"></div><div class="card" style="padding:12px;text-align:center;border-color:var(--accent)"><div style="font-size:10px;color:var(--accent);text-transform:uppercase">Animal</div><div style="font-weight:600;font-size:15px">${a.nombre}</div><div style="font-size:11px;color:var(--text2)">${a.caravana} | ${a.raza}</div></div>${a.crias>0?'<div style="width:2px;height:16px;background:var(--border)"></div><div style="font-size:12px;color:var(--text2)">'+a.crias+' cría'+(a.crias>1?'s':'')+'</div>':''}</div>`;
+  document.getElementById('ficha-animal').scrollIntoView({behavior:'smooth'});
+  document.querySelectorAll('#ficha-tabs .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#ficha-animal .tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector('#ficha-tabs .tab').classList.add('active');
+  document.getElementById('tab-datos').classList.add('active');
+}
+function closeFicha(){document.getElementById('ficha-animal').style.display='none'}
+document.addEventListener('click',e=>{if(e.target.classList.contains('tab')&&e.target.dataset.tab){const p=e.target.closest('.card')||document;p.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));p.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');document.getElementById(e.target.dataset.tab).classList.add('active')}});
+
+// ========== TABLES ==========
+function renderSanidad(){
+  const list=activeCampo==='all'?sanidadData:sanidadData.filter(s=>s.campo===activeCampo);
+  document.getElementById('tbody-sanidad').innerHTML=list.map(s=>`<tr><td>${s.fecha}</td><td><strong>${s.caravana}</strong></td><td>${campos[s.campo]?.nombre||''}</td><td>${s.tipo}</td><td>${s.producto}</td><td>${s.proxima}</td><td>${s.resp}</td></tr>`).join('');
+}
+function renderMovimientos(){
+  const list=activeCampo==='all'?movimientosData:movimientosData.filter(m=>m.campo===activeCampo);
+  const tt={'Cambio potrero':'tag-green','Venta':'tag-red','Ingreso':'tag-blue','Destete':'tag-yellow'};
+  document.getElementById('tbody-movimientos').innerHTML=list.map(m=>`<tr><td>${m.fecha}</td><td>${campos[m.campo]?.nombre||''}</td><td><span class="tag ${tt[m.tipo]||'tag-green'}">${m.tipo}</span></td><td>${m.cant}</td><td>${m.origen}</td><td>${m.destino}</td><td>${m.motivo}</td><td>${m.user}</td></tr>`).join('');
+}
+
+// ========== MODALS ==========
+function openModal(title,html){document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').innerHTML=html;document.getElementById('modal-overlay').classList.add('show')}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.remove('show')}
+function saveModal(){closeModal()}
+function openModalAnimal(){openModal('Nuevo animal','<div class="form-row"><div class="form-group"><label>Caravana</label><input placeholder="AR###"></div><div class="form-group"><label>Nombre</label><input></div></div><div class="form-row"><div class="form-group"><label>Raza</label><select><option>Angus</option><option>Hereford</option><option>Braford</option><option>Otra</option></select></div><div class="form-group"><label>Categoría</label><select><option>Vaca</option><option>Toro</option><option>Vaquillona</option><option>Novillo</option><option>Ternero</option><option>Ternera</option></select></div></div><div class="form-row"><div class="form-group"><label>Campo</label><select>'+Object.values(campos).map(c=>'<option value="'+c.id+'">'+c.nombre+'</option>').join('')+'</select></div><div class="form-group"><label>Sexo</label><select><option>Hembra</option><option>Macho</option></select></div></div><div class="form-row"><div class="form-group"><label>Nacimiento</label><input type="date"></div><div class="form-group"><label>Peso (kg)</label><input type="number"></div></div><div class="form-row"><div class="form-group"><label>Madre</label><input placeholder="Caravana"></div><div class="form-group"><label>Padre</label><input placeholder="Caravana"></div></div><div class="form-group"><label>Observaciones</label><textarea rows="2"></textarea></div>')}
+function openModalSanidad(){openModal('Evento sanitario','<div class="form-row"><div class="form-group"><label>Caravana</label><input></div><div class="form-group"><label>Campo</label><select>'+Object.values(campos).map(c=>'<option>'+c.nombre+'</option>').join('')+'</select></div></div><div class="form-row"><div class="form-group"><label>Tipo</label><select><option>Vacunación</option><option>Desparasitación</option><option>Curación</option><option>Tacto</option></select></div><div class="form-group"><label>Producto</label><input></div></div><div class="form-row"><div class="form-group"><label>Fecha</label><input type="date"></div><div class="form-group"><label>Próxima</label><input type="date"></div></div><div class="form-group"><label>Responsable</label><input></div>')}
+function openModalSanidadMasiva(){openModal('Carga masiva','<p style="font-size:12px;color:var(--text2);margin-bottom:10px">Aplicar a múltiples animales.</p><div class="form-row"><div class="form-group"><label>Campo</label><select>'+Object.values(campos).map(c=>'<option>'+c.nombre+'</option>').join('')+'</select></div><div class="form-group"><label>Tipo</label><select><option>Vacunación</option><option>Desparasitación</option></select></div></div><div class="form-row"><div class="form-group"><label>Producto</label><input></div><div class="form-group"><label>Dosis</label><input></div></div><div class="form-row"><div class="form-group"><label>Fecha</label><input type="date"></div><div class="form-group"><label>Próxima</label><input type="date"></div></div>')}
+function openModalMov(){openModal('Registrar movimiento','<div class="form-row"><div class="form-group"><label>Campo</label><select>'+Object.values(campos).map(c=>'<option>'+c.nombre+'</option>').join('')+'</select></div><div class="form-group"><label>Tipo</label><select><option>Cambio potrero</option><option>Ingreso</option><option>Venta</option><option>Destete</option><option>Muerte</option></select></div></div><div class="form-row"><div class="form-group"><label>Origen</label><input></div><div class="form-group"><label>Destino</label><input></div></div><div class="form-row"><div class="form-group"><label>Cantidad</label><input type="number"></div><div class="form-group"><label>Fecha</label><input type="date"></div></div><div class="form-group"><label>Motivo</label><input></div>')}
+function showNotifications(){openModal('Notificaciones','<div class="alert-row"><span class="alert-dot red"></span>3 vacunaciones vencidas — Aftosa terneros</div><div class="alert-row"><span class="alert-dot yellow"></span>Parto vaca #142 — Campito — 5 días</div><div class="alert-row"><span class="alert-dot yellow"></span>15 terneros destete — Los Olmos</div><div class="alert-row"><span class="alert-dot blue"></span>Service tractor — El Cañadón</div><div class="alert-row"><span class="alert-dot blue"></span>Potrero 4 al 92% — Don Alejandro</div>')}
+
+// ========== CHARTS ==========
+function initDashboardCharts(){
+  new Chart(document.getElementById('chart-rodeo'),{type:'line',data:{labels:['Ene','Feb','Mar','Abr','May','Jun','Jul'],datasets:[{label:'Total',data:[360,365,370,375,380,387,totalCabezas],borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,.1)',fill:true,tension:.3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+  new Chart(document.getElementById('chart-gastos'),{type:'doughnut',data:{labels:['Ganadería','Agricultura','Personal','Maquinaria','Generales'],datasets:[{data:[35,25,22,12,6],backgroundColor:['#2d6a4f','#ff9800','#1e88e5','#ab47bc','#795548']}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}});
+}
+function initReportCharts(){
+  const c1=document.getElementById('chart-composicion');if(c1._done)return;c1._done=true;
+  new Chart(c1,{type:'pie',data:{labels:['Vacas','Toros','Vaquillonas','Novillos','Terneros/as'],datasets:[{data:[145,8,42,65,87],backgroundColor:['#2d6a4f','#1b5e20','#66bb6a','#ff9800','#ffb74d']}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}});
+  new Chart(document.getElementById('chart-porcampo'),{type:'bar',data:{labels:Object.values(campos).map(c=>c.nombre),datasets:[{label:'Cabezas',data:Object.values(campos).map(c=>c.cabezas),backgroundColor:Object.values(campos).map(c=>c.color)}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+}
+
+// ========== INIT ==========
+renderDashboard();renderAnimales(animales);renderSanidad();renderMovimientos();initDashboardCharts();setTimeout(initMap,300);
+</script>
+</body>
+</html>
