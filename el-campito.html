@@ -12,13 +12,13 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#f5f5f0;--bg2:#fff;--bg3:#f8f8f5;--text:#1a1a1a;--text2:#555;--text3:#888;--accent:#367C2B;--accent2:#4a9e3c;--accent-bg:#e8f5e3;--accent-t:#2a6122;--jd-yellow:#FFDE00;--danger:#c62828;--danger-bg:#ffebee;--warn:#f57f17;--warn-bg:#fff8e1;--border:#e0ddd5;--border2:#ccc;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08)}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
-.sidebar{width:220px;background:var(--accent);color:#fff;display:flex;flex-direction:column;flex-shrink:0;transition:width .2s}.sidebar.collapsed{width:60px}.sidebar.collapsed .nav-text,.sidebar.collapsed .logo-text,.sidebar.collapsed .user-info span,.sidebar.collapsed .campo-sel{display:none}.sidebar.collapsed .logo{justify-content:center}.sidebar.collapsed .nav-item{justify-content:center;padding:12px}.sidebar.collapsed .user-box{justify-content:center}
-.logo{display:flex;align-items:center;justify-content:center;padding:12px;border-bottom:1px solid rgba(255,255,255,.15)}.logo img{width:100%;max-width:190px;height:auto;flex-shrink:0;image-rendering:auto}
+.sidebar{width:220px;background:var(--accent);color:#fff;display:flex;flex-direction:column;flex-shrink:0;}
+.logo{display:flex;align-items:center;justify-content:center;padding:12px;border-bottom:1px solid rgba(255,255,255,.15)}.logo img{width:100%;max-width:190px;height:auto;flex-shrink:0}.logo-text{display:none}
 .campo-sel{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.15)}
 .campo-sel select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-family:inherit}
 .campo-sel select option{color:#1a1a1a;background:#fff}
 .campo-sel label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.6);display:block;margin-bottom:4px}
-.nav{flex:1;overflow-y:auto;padding:8px 0}
+.nav{flex:1;overflow:hidden;padding:8px 0}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:14px;color:rgba(255,255,255,.75);transition:.15s;border-left:3px solid transparent}.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}.nav-item.active{background:rgba(255,255,255,.15);color:#fff;border-left-color:var(--jd-yellow)}.nav-item i{font-size:20px;width:24px;text-align:center}
 .nav-sep{height:1px;background:rgba(255,255,255,.12);margin:8px 12px}
 .user-box{display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid rgba(255,255,255,.15)}.user-box .avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}.user-info span{font-size:12px;display:block}.user-info .uname{color:#fff;font-weight:500}.user-info .urole{color:rgba(255,255,255,.6)}
@@ -94,7 +94,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="topbar">
     <div class="topbar-left">
       <button class="btn-hamburger" onclick="toggleMobileSidebar()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--accent);padding:4px;display:none"><i class="ti ti-menu-2"></i></button>
-      
+
       <h1 id="page-title">Dashboard</h1>
       <span class="campo-badge" id="campo-badge">Todos los campos</span>
     </div>
@@ -339,7 +339,9 @@ const movimientosData = [
 // ========== NAVIGATION ==========
 function navigateTo(page){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const el=document.getElementById('page-'+page);if(el)el.classList.add('active');const nav=document.querySelector('.nav-item[data-page="'+page+'"]');if(nav)nav.classList.add('active');const titles={dashboard:'Dashboard',mapa:'Mapa',hacienda:'Hacienda',sanidad:'Sanidad',movimientos:'Movimientos',agricultura:'Agricultura',personal:'Personal',maquinaria:'Maquinaria',gastos:'Gastos e ingresos',reportes:'Reportes',config:'Configuración'};document.getElementById('page-title').textContent=titles[page]||page;if(page==='mapa')setTimeout(()=>{if(map){map.invalidateSize();fitAllCampos()}},100);if(page==='reportes')initReportCharts();closeFicha()}
 document.querySelectorAll('.nav-item').forEach(item=>{item.addEventListener('click',()=>navigateTo(item.dataset.page))});
-}
+function toggleMobileSidebar(){const sb=document.getElementById('sidebar');const ov=document.getElementById('sidebarOverlay');sb.classList.toggle('mobile-open');ov.classList.toggle('show')}
+function closeMobileSidebar(){const sb=document.getElementById('sidebar');const ov=document.getElementById('sidebarOverlay');sb.classList.remove('mobile-open');ov.classList.remove('show')}
+
 document.getElementById('today-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
 
 // ========== CAMPO SWITCH ==========
